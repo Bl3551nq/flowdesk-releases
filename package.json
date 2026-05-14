@@ -1,0 +1,73 @@
+{
+  "name": "flowdesk",
+  "version": "1.0.0",
+  "description": "FlowDesk – Your pre-market trading ritual",
+  "main": "main.js",
+  "author": {
+    "name": "FlowDesk",
+    "email": "your@email.com"
+  },
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev",
+    "build:win": "electron-builder --win",
+    "build:mac": "electron-builder --mac",
+    "build:all": "electron-builder --win --mac"
+  },
+  "dependencies": {
+    "electron-store": "^8.1.0",
+    "electron-updater": "^6.1.7"
+  },
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.1"
+  },
+  "build": {
+    "appId": "com.flowdesk.app",
+    "productName": "FlowDesk",
+    "copyright": "Copyright © 2025 FlowDesk",
+    "icon": "assets/icon",
+    "files": [
+      "main.js",
+      "preload.js",
+      "src/**/*",
+      "assets/**/*"
+    ],
+    "publish": {
+      "provider": "github",
+      "owner": "YOUR_GITHUB_USERNAME",
+      "repo": "flowdesk-releases"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ],
+      "icon": "assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "FlowDesk",
+      "installerHeaderIcon": "assets/icon.ico",
+      "uninstallDisplayName": "FlowDesk"
+    },
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": ["x64", "arm64"]
+        }
+      ],
+      "icon": "assets/icon.icns",
+      "category": "public.app-category.productivity"
+    },
+    "dmg": {
+      "title": "FlowDesk"
+    }
+  }
+}

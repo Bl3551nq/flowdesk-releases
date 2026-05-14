@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Activate FlowDesk</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+
+html, body {
+  width:100%; height:100%;
+  font-family: -apple-system, 'Helvetica Neue', sans-serif;
+  background: linear-gradient(155deg, #000a2d 0%, #020512 40%, #000820 100%);
+  color: #fff;
+  user-select: none;
+  overflow: hidden;
+}
+
+.card {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 36px 32px;
+  gap: 0;
+}
+
+.logo {
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: -.03em;
+  margin-bottom: 6px;
+}
+.logo span { color: rgba(130,0,255,0.9); }
+
+.tagline {
+  font-size: 12px;
+  color: rgba(255,255,255,0.42);
+  margin-bottom: 32px;
+  letter-spacing: .04em;
+}
+
+label {
+  width: 100%;
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.45);
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+input {
+  width: 100%;
+  padding: 11px 14px;
+  border-radius: 12px;
+  border: 1.5px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.07);
+  color: #fff;
+  font-size: 13.5px;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  letter-spacing: .08em;
+  outline: none;
+  transition: border-color .2s, box-shadow .2s;
+  margin-bottom: 14px;
+  text-align: center;
+}
+input::placeholder { color: rgba(255,255,255,0.22); letter-spacing: .04em; font-family: inherit; }
+input:focus {
+  border-color: rgba(130,0,255,0.8);
+  box-shadow: 0 0 0 3px rgba(130,0,255,0.18);
+}
+
+button {
+  width: 100%;
+  padding: 12px;
+  border-radius: 12px;
+  border: none;
+  background: rgba(110,0,210,0.9);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background .2s, transform .15s, box-shadow .2s;
+  box-shadow: 0 0 18px 4px rgba(130,0,255,0.35);
+  margin-bottom: 16px;
+}
+button:hover { background: rgba(140,20,255,0.95); transform: scale(1.02); }
+button:active { transform: scale(0.98); }
+button:disabled { background: rgba(255,255,255,0.12); box-shadow: none; cursor: not-allowed; transform: none; }
+
+.status {
+  font-size: 12px;
+  min-height: 18px;
+  text-align: center;
+  transition: color .2s;
+}
+.status.error   { color: rgba(255,90,80,0.9);  }
+.status.success { color: rgba(55,210,120,0.9); }
+.status.loading { color: rgba(255,255,255,0.42); }
+
+.gumroad-link {
+  margin-top: 18px;
+  font-size: 11px;
+  color: rgba(255,255,255,0.25);
+}
+.gumroad-link a {
+  color: rgba(160,80,255,0.7);
+  text-decoration: none;
+  cursor: pointer;
+}
+.gumroad-link a:hover { color: rgba(160,80,255,1); }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">Flow<span>Desk</span></div>
+  <div class="tagline">Your pre-market trading ritual</div>
+
+  <label for="key-input">License Key</label>
+  <input
+    id="key-input"
+    type="text"
+    placeholder="XXXXXXXX-XXXXXXXX-XXXXXXXX-XXXXXXXX"
+    maxlength="64"
+    autocomplete="off"
+    spellcheck="false"
+  >
+
+  <button id="activate-btn" onclick="activate()">Activate</button>
+  <div class="status" id="status"></div>
+
+  <div class="gumroad-link">
+    Don't have a key? <a onclick="openGumroad()">Get FlowDesk on Gumroad →</a>
+  </div>
+</div>
+
+<script>
+  const input  = document.getElementById('key-input');
+  const btn    = document.getElementById('activate-btn');
+  const status = document.getElementById('status');
+
+  input.addEventListener('keydown', e => { if (e.key === 'Enter') activate(); });
+
+  // Auto-format: uppercase, strip spaces
+  input.addEventListener('input', () => {
+    const pos = input.selectionStart;
+    input.value = input.value.toUpperCase().replace(/[^A-Z0-9\-]/g, '');
+    input.setSelectionRange(pos, pos);
+  });
+
+  async function activate() {
+    const key = input.value.trim();
+    if (!key) { setStatus('Please enter your license key.', 'error'); return; }
+
+    btn.disabled = true;
+    setStatus('Verifying with Gumroad…', 'loading');
+
+    try {
+      const result = await window.flowdeskAPI.validateLicense(key);
+      if (result.valid) {
+        setStatus('✓ License activated! Opening FlowDesk…', 'success');
+        setTimeout(() => window.flowdeskAPI.notifyActivated(), 900);
+      } else {
+        setStatus(result.error || 'Invalid license key. Please try again.', 'error');
+        btn.disabled = false;
+      }
+    } catch (e) {
+      setStatus('Connection error. Please check your internet.', 'error');
+      btn.disabled = false;
+    }
+  }
+
+  function setStatus(msg, type) {
+    status.textContent  = msg;
+    status.className    = 'status ' + (type || '');
+  }
+
+  function openGumroad() {
+    // Opens in system browser
+    require && require('electron').shell
+      ? require('electron').shell.openExternal('https://gumroad.com/l/flowdesk')
+      : window.open('https://gumroad.com/l/flowdesk', '_blank');
+  }
+</script>
+</body>
+</html>
